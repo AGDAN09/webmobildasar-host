@@ -1,0 +1,530 @@
+<?php
+// Data dummy mobil Civic Turbo
+$mobil_dummy = [
+    ['id' => 1, 'nama' => 'Honda Civic Turbo RS 2022', 'harga' => 550000000, 'tahun' => 2022, 'km' => 10000, 'transmisi' => 'Automatic', 'warna' => 'Putih', 'gambar' => 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/394a571c-530a-4434-8219-e4cfe582c400.png', 'deskripsi' => 'Civic Turbo RS dengan fitur lengkap, kondisi mulus seperti baru, pajak panjang.'],
+    ['id' => 2, 'nama' => 'Honda Civic Turbo 1.5 2021', 'harga' => 480000000, 'tahun' => 2021, 'km' => 25000, 'transmisi' => 'Automatic', 'warna' => 'Hitam', 'gambar' => 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/4e53b487-8831-4525-b630-fc7d390b85d0.png', 'deskripsi' => 'Civic Turbo dengan mesin bertenaga, interior premium, perawatan rutin.'],
+    ['id' => 3, 'nama' => 'Honda Civic Turbo 2020', 'harga' => 420000000, 'tahun' => 2020, 'km' => 35000, 'transmisi' => 'Manual', 'warna' => 'Merah', 'gambar' => 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/cc7d9c07-d09d-41e3-9124-d29f77f2cb65.png', 'deskripsi' => 'Civic Turbo transmisi manual, untuk pengemudi yang menyukai kontrol penuh.'],
+    ['id' => 4, 'nama' => 'Honda Civic Turbo RS 2023', 'harga' => 600000000, 'tahun' => 2023, 'km' => 5000, 'transmisi' => 'Automatic', 'warna' => 'Abu-abu', 'gambar' => 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/560fcf31-1154-4de7-9429-23e5c4c373ee.png', 'deskripsi' => 'Civic Turbo RS model terbaru, garansi resmi masih aktif.'],
+    ['id' => 5, 'nama' => 'Honda Civic Turbo 2019', 'harga' => 400000000, 'tahun' => 2019, 'km' => 45000, 'transmisi' => 'Automatic', 'warna' => 'Biru', 'gambar' => 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/7326c32d-5ce7-4211-8b69-b03fa48a5c31.png', 'deskripsi' => 'Civic Turbo dengan body mulus, mesin terawat, siap pakai.'],
+];
+
+// Fungsi filter dan pencarian
+function filter_mobil($mobil, $params) {
+    $filtered = $mobil;
+    
+    // Filter pencarian
+    if (!empty($params['search'])) {
+        $search = strtolower($params['search']);
+        $filtered = array_filter($filtered, function($car) use ($search) {
+            return strpos(strtolower($car['nama']), $search) !== false;
+        });
+    }
+    
+    // Filter harga
+    if (!empty($params['harga_min']) && is_numeric($params['harga_min'])) {
+        $filtered = array_filter($filtered, function($car) use ($params) {
+            return $car['harga'] >= $params['harga_min'];
+        });
+    }
+    
+    if (!empty($params['harga_max']) && is_numeric($params['harga_max'])) {
+        $filtered = array_filter($filtered, function($car) use ($params) {
+            return $car['harga'] <= $params['harga_max'];
+        });
+    }
+    
+    // Filter tahun
+    if (!empty($params['tahun_min']) && is_numeric($params['tahun_min'])) {
+        $filtered = array_filter($filtered, function($car) use ($params) {
+            return $car['tahun'] >= $params['tahun_min'];
+        });
+    }
+    
+    if (!empty($params['tahun_max']) && is_numeric($params['tahun_max'])) {
+        $filtered = array_filter($filtered, function($car) use ($params) {
+            return $car['tahun'] <= $params['tahun_max'];
+        });
+    }
+    
+    // Filter transmisi
+    if (!empty($params['transmisi'])) {
+        $filtered = array_filter($filtered, function($car) use ($params) {
+            return $car['transmisi'] === $params['transmisi'];
+        });
+    }
+    
+    return array_values($filtered);
+}
+
+// Ambil parameter dari URL
+$params = $_GET;
+$page = isset($params['page']) ? max(1, (int)$params['page']) : 1;
+$per_page = 3;
+
+$filtered_mobil = filter_mobil($mobil_dummy, $params);
+$total_mobil = count($filtered_mobil);
+$total_pages = ceil($total_mobil / $per_page);
+$offset = ($page - 1) * $per_page;
+$current_page_mobil = array_slice($filtered_mobil, $offset, $per_page);
+
+// Tentukan halaman yang aktif
+$current_page = isset($_GET['page']) ? $_GET['page'] : 'home';
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicTurboID - Jual Beli Mobil Civic Turbo By AGDAN WIRAYUDHA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/1f806d7b-460b-4e97-90ab-35b2a3972e8c.png');
+            background-size: cover;
+            background-position: center;
+        }
+        .car-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .active-tab {
+            border-bottom: 3px solid #3b82f6;
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-100">
+    <!-- Header -->
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d81f6a83-7498-4839-90f1-1a6d283bb61f.png" alt="Logo CivicTurboID" class="h-10 w-10 mr-2">
+                <h1 class="text-xl font-bold text-blue-600">CivicTurbo<span class="text-gray-800">ID Program By Agdan</span></h1>
+            </div>
+            <nav class="hidden md:flex space-x-6">
+                <a href="?page=home" class="<?= $current_page === 'home' ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-blue-600' ?>">Beranda</a>
+                <a href="?page=mobil" class="<?= $current_page === 'mobil' ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-blue-600' ?>">Daftar Mobil</a>
+                <a href="?page=about" class="<?= $current_page === 'about' ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-blue-600' ?>">Tentang Kami</a>
+                <a href="?page=contact" class="<?= $current_page === 'contact' ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-blue-600' ?>">Kontak</a>
+            </nav>
+            <button class="md:hidden text-gray-600">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Konten Utama -->
+    <main>
+        <?php if ($current_page === 'home'): ?>
+            <!-- Landing Page -->
+            <section class="hero text-white py-20">
+                <div class="container mx-auto px-4 text-center">
+                    <h1 class="text-4xl md:text-5xl font-bold mb-4">Temukan Civic Turbo Idaman Anda</h1>
+                    <p class="text-xl mb-8 max-w-2xl mx-auto">Platform terbaik untuk jual beli mobil Honda Civic Turbo dengan kualitas terjamin di Indonesia</p>
+                    <a href="?page=mobil" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg inline-block transition duration-300">Lihat Koleksi</a>
+                </div>
+            </section>
+
+            <section class="py-12 bg-white">
+                <div class="container mx-auto px-4">
+                    <h2 class="text-3xl font-bold text-center mb-12">Mengapa Memilih Civic Turbo?</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="text-center p-6 rounded-lg shadow-md">
+                            <div class="text-blue-600 text-4xl mb-4">
+                                <i class="fas fa-tachometer-alt"></i>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Performa Tinggi</h3>
+                            <p class="text-gray-600">Mesin turbo 1.5L dengan tenaga 174 HP memberikan akselerasi maksimal dan efisiensi bahan bakar.</p>
+                        </div>
+                        <div class="text-center p-6 rounded-lg shadow-md">
+                            <div class="text-blue-600 text-4xl mb-4">
+                                <i class="fas fa-couch"></i>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Interior Premium</h3>
+                            <p class="text-gray-600">Kabin nyaman dengan material berkualitas tinggi dan teknologi terkini untuk pengalaman berkendara mewah.</p>
+                        </div>
+                        <div class="text-center p-6 rounded-lg shadow-md">
+                            <div class="text-blue-600 text-4xl mb-4">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Keamanan Lengkap</h3>
+                            <p class="text-gray-600">Dilengkapi dengan sistem Honda Sensing untuk perlindungan maksimal selama perjalanan.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="py-12 bg-gray-100">
+                <div class="container mx-auto px-4">
+                    <h2 class="text-3xl font-bold text-center mb-8">Rekomendasi Untuk Anda</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <?php foreach(array_slice($mobil_dummy, 0, 3) as $mobil): ?>
+                            <div class="bg-white rounded-lg overflow-hidden shadow-md car-card transition duration-300">
+                                <div class="relative h-48 overflow-hidden">
+                                    <img src="<?= $mobil['gambar'] ?>" alt="<?= htmlspecialchars($mobil['nama']) ?>" class="w-full h-full object-cover">
+                                    <div class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">BARU</div>
+                                </div>
+                                <div class="p-4">
+                                    <h3 class="text-lg font-bold mb-1"><?= $mobil['nama'] ?></h3>
+                                    <p class="text-gray-600 text-sm mb-2">Tahun <?= $mobil['tahun'] ?> • <?= $mobil['km'] ?> km</p>
+                                    <p class="text-blue-600 font-bold text-xl mb-3">Rp<?= number_format($mobil['harga'], 0, ',', '.') ?></p>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-500"><?= $mobil['transmisi'] ?></span>
+                                        <a href="?page=detail&id=<?= $mobil['id'] ?>" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-1 px-3 rounded">Lihat Detail</a>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="text-center mt-8">
+                        <a href="?page=mobil" class="inline-block bg-gray-800 hover:bg-black text-white font-medium py-2 px-6 rounded-lg transition duration-300">Lihat Semua Mobil</a>
+                    </div>
+                </div>
+            </section>
+
+        <?php elseif ($current_page === 'mobil'): ?>
+            <!-- Halaman Daftar Mobil -->
+            <section class="py-8 bg-gray-100">
+                <div class="container mx-auto px-4">
+                    <h1 class="text-3xl font-bold mb-6">Daftar Mobil Civic Turbo</h1>
+                    
+                    <!-- Filter dan Pencarian -->
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                        <form method="get" action="">
+                            <input type="hidden" name="page" value="mobil">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Cari Mobil</label>
+                                    <input type="text" name="search" placeholder="Cari Civic Turbo..." value="<?= $_GET['search'] ?? '' ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Harga Minimal</label>
+                                    <input type="number" name="harga_min" placeholder="Rp Min" value="<?= $_GET['harga_min'] ?? '' ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Harga Maksimal</label>
+                                    <input type="number" name="harga_max" placeholder="Rp Max" value="<?= $_GET['harga_max'] ?? '' ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
+                                    <select name="tahun_min" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                        <option value="">Tahun Min</option>
+                                        <?php for($year = date('Y'); $year >= 2010; $year--): ?>
+                                            <option value="<?= $year ?>" <?= (isset($_GET['tahun_min']) && $_GET['tahun_min'] == $year) ? 'selected' : '' ?>><?= $year ?></option>
+                                        <?php endfor; ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Transmisi</label>
+                                    <select name="transmisi" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                        <option value="">Semua Tipe</option>
+                                        <option value="Automatic" <?= (isset($_GET['transmisi']) && $_GET['transmisi'] == 'Automatic') ? 'selected' : '' ?>>Automatic</option>
+                                        <option value="Manual" <?= (isset($_GET['transmisi']) && $_GET['transmisi'] == 'Manual') ? 'selected' : '' ?>>Manual</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-end">
+                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md w-full md:w-auto">Terapkan Filter</button>
+                                    <?php if(count($_GET) > 1 && isset($_GET['page'])): ?>
+                                        <a href="?page=mobil" class="ml-2 text-gray -600 hover:text-gray-800 text-sm">Reset</a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Hasil Pencarian -->
+                    <div class="mb-4">
+                        <p class="text-gray-600">
+                            Menampilkan <?= $total_mobil ?> hasil
+                            <?php if(isset($_GET['search'])): ?>
+                                untuk "<strong><?= htmlspecialchars($_GET['search']) ?></strong>"
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                    
+                    <!-- Daftar Mobil -->
+                    <?php if(count($current_page_mobil) > 0): ?>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <?php foreach($current_page_mobil as $mobil): ?>
+                                <div class="bg-white rounded-lg overflow-hidden shadow-md car-card transition duration-300">
+                                    <div class="relative h-48 overflow-hidden">
+                                        <img src="<?= $mobil['gambar'] ?>" alt="<?= htmlspecialchars($mobil['nama']) ?>" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="p-4">
+                                        <h3 class="text-lg font-bold mb-1"><?= $mobil['nama'] ?></h3>
+                                        <p class="text-gray-600 text-sm mb-2">Tahun <?= $mobil['tahun'] ?> • <?= $mobil['km'] ?> km</p>
+                                        <p class="text-blue-600 font-bold text-xl mb-3">Rp<?= number_format($mobil['harga'], 0, ',', '.') ?></p>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-500"><?= $mobil['transmisi'] ?></span>
+                                            <a href="?page=detail&id=<?= $mobil['id'] ?>" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-1 px-3 rounded">Lihat Detail</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <?php if($total_pages > 1): ?>
+                            <div class="flex justify-center mt-8">
+                                <nav class="flex items-center space-x-2">
+                                    <?php if($page > 1): ?>
+                                        <a href="?<?= http_build_query(array_merge($params, ['page' => $page - 1])) ?>" class="px-3 py-1 border rounded-md hover:bg-gray-100">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                    
+                                    <?php for($i = 1; $i <= $total_pages; $i++): ?>
+                                        <a href="?<?= http_build_query(array_merge($params, ['page' => $i])) ?>" class="px-3 py-1 border rounded-md <?= $i == $page ? 'bg-blue-600 text-white border-blue-600' : 'hover:bg-gray-100' ?>"><?= $i ?></a>
+                                    <?php endfor; ?>
+                                    
+                                    <?php if($page < $total_pages): ?>
+                                        <a href="?<?= http_build_query(array_merge($params, ['page' => $page + 1])) ?>" class="px-3 py-1 border rounded-md hover:bg-gray-100">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </nav>
+                            </div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="text-center py-12 bg-white rounded-lg shadow-md">
+                            <i class="fas fa-car text-4xl text-gray-300 mb-4"></i>
+                            <h3 class="text-lg font-medium text-gray-700">Tidak ada mobil yang ditemukan</h3>
+                            <p class="text-gray-500 mt-2">Silahkan coba dengan kriteria pencarian yang berbeda</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </section>
+
+        <?php elseif ($current_page === 'detail' && isset($_GET['id'])): ?>
+            <!-- Halaman Detail Mobil -->
+            <?php 
+                $id = (int)$_GET['id'];
+                $mobil = null;
+                foreach($mobil_dummy as $car) {
+                    if($car['id'] == $id) {
+                        $mobil = $car;
+                        break;
+                    }
+                }
+                
+                if(!$mobil): ?>
+                    <div class="py-12 text-center">
+                        <h1 class="text-2xl font-bold text-gray-700">Mobil tidak ditemukan</h1>
+                        <a href="?page=mobil" class="text-blue-600 hover:underline mt-4 inline-block">Kembali ke daftar mobil</a>
+                    </div>
+                <?php else: ?>
+                    <section class="py-8 bg-gray-100">
+                        <div class="container mx-auto px-4">
+                            <div class="flex items-center text-sm text-gray-500 mb-4">
+                                <a href="?page=home" class="text-blue-600 hover:underline">Beranda</a>
+                                <span class="mx-2">/</span>
+                                <a href="?page=mobil" class="text-blue-600 hover:underline">Daftar Mobil</a>
+                                <span class="mx-2">/</span>
+                                <span><?= $mobil['nama'] ?></span>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                                <div class="grid grid-cols-1 lg:grid-cols-2">
+                                    <div class="p-4">
+                                        <div class="mb-4">
+                                            <img src="<?= $mobil['gambar'] ?>" alt="<?= htmlspecialchars($mobil['nama']) ?>" class="w-full h-80 object-cover rounded-lg">
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <img src="jokcivic.png" alt="Interior mobil <?= htmlspecialchars($mobil['nama']) ?> dengan jok kulit hitam" class="h-24 object-cover rounded">
+                                            <img src="dashboardcivic.jpg" alt="Dashboard mobil <?= htmlspecialchars($mobil['nama']) ?> dengan teknologi modern" class="h-24 object-cover rounded">
+                                            <img src="mesincivic.jpg" alt="Tampilan samping mobil <?= htmlspecialchars($mobil['nama']) ?> warna <?= $mobil['warna'] ?>" class="h-24 object-cover rounded">
+                                        </div>
+                                    </div>
+                                    <div class="p-6">
+                                        <h1 class="text-2xl font-bold mb-2"><?= $mobil['nama'] ?></h1>
+                                        <p class="text-blue-600 text-2xl font-bold mb-4">Rp<?= number_format($mobil['harga'], 0, ',', '.') ?></p>
+                                        
+                                        <div class="mb-6">
+                                            <a href="https://wa.me/62882009157424?text=Saya%20tertarik%20dengan%20mobil%20<?= urlencode($mobil['nama']) ?>%20di%20CivicTurboID" 
+                                               class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center transition duration-300">
+                                                <i class="fab fa-whatsapp mr-2"></i> Hubungi Penjual
+                                            </a>
+                                            <button class="ml-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center transition duration-300">
+                                                <i class="fas fa-phone-alt mr-2"></i> Telepon
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-2 gap-4 mb-6">
+                                            <div>
+                                                <p class="text-gray-500 text-sm">Tahun</p>
+                                                <p class="font-medium"><?= $mobil['tahun'] ?></p>
+                                            </div>
+                                            <div>
+                                                <p class="text-gray-500 text-sm">Kilometer</p>
+                                                <p class="font-medium"><?= number_format($mobil['km'], 0, ',', '.') ?> km</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-gray-500 text-sm">Transmisi</p>
+                                                <p class="font-medium"><?= $mobil['transmisi'] ?></p>
+                                            </div>
+                                            <div>
+                                                <p class="text-gray-500 text-sm">Warna</p>
+                                                <p class="font-medium"><?= $mobil['warna'] ?></p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <h3 class="text-lg font-bold mb-2">Deskripsi</h3>
+                                            <p class="text-gray-700"><?= $mobil['deskripsi'] ?></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                <?php endif; ?>
+
+        <?php elseif ($current_page === 'about'): ?>
+            <!-- Halaman About -->
+            <section class="py-12 bg-white">
+                <div class="container mx-auto px-4">
+                    <div class="max-w-4xl mx-auto">
+                        <h1 class="text-3xl font-bold mb-6 text-center">Tentang CivicTurboID</h1>
+                        <div class="flex justify-center mb-8">
+                            <img src="images.jpg" alt="Tim CivicTurboID dengan 5 anggota berpakaian formal berdiri di depan showroom mobil" class="rounded-lg shadow-md">
+                        </div>
+                        <div class="prose max-w-none">
+                            <h2 class="text-2xl font-bold mb-4">Visi Kami</h2>
+                            <p class="mb-4">Sebagai platform terdepan dalam jual beli mobil Honda Civic Turbo di Indonesia, kami berkomitmen untuk memberikan pengalaman terbaik bagi pecinta performa tinggi dengan desain sporty.</p>
+                            
+                            <h2 class="text-2xl font-bold mb-4 mt-6">Mengapa Civic Turbo?</h2>
+                            <p class="mb-4">Honda Civic Turbo telah menjadi ikon dalam segmen mobil sporty di Indonesia. Dengan mesin bertenaga dan desain yang futuristik, Civic Turbo menawarkan pengalaman berkendara yang tak terlupakan.</p>
+                            
+                            <h2 class="text-2xl font-bold mb-4 mt-6">Layanan Kami</h2>
+                            <ul class="list-disc pl-5 mb-4">
+                                <li class="mb-2">Inspeksi menyeluruh sebelum transaksi</li>
+                                <li class="mb-2">Fasilitas negoisasi yang transparan</li>
+                                <li class="mb-2">Bantuan proses administratif</li>
+                                <li class="mb-2">Pilihan pembiayaan yang beragam</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        <?php elseif ($current_page === 'contact'): ?>
+            <!-- Halaman Contact -->
+            <section class="py-12 bg-gray-100">
+                <div class="container mx-auto px-4">
+                    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2">
+                            <div class="p-8">
+                                <h1 class="text-2xl font-bold mb-6">Hubungi Kami</h1>
+                                <form>
+                                    <div class="mb-4">
+                                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                                        <input type="text" id="name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="mb-4">
+                                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        <input type="email" id="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="mb-4">
+                                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Nomor Telepon</label>
+                                        <input type="tel" id="phone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="mb-4">
+                                        <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Pesan</label>
+                                        <textarea id="message" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                    </div>
+                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition duration-300">Kirim Pesan</button>
+                                </form>
+                            </div>
+                            <div class="bg-blue-600 text-white p-8">
+                                <h2 class="text-xl font-bold mb-4">Informasi Kontak</h2>
+                                <div class="mb-6">
+                                    <h3 class="font-medium mb-2">Alamat</h3>
+                                    <p>Jl. Semolowaru 09</p>
+                                </div>
+                                <div class="mb-6">
+                                    <h3 class="font-medium mb-2">Jam Operasional</h3>
+                                    <p>Senin - Jumat: 09.00 - 17.00 WIB</p>
+                                    <p>Sabtu: 09.00 - 15.00 WIB</p>
+                                </div>
+                                <div class="mb-6">
+                                    <h3 class="font-medium mb-2">Kontak Langsung</h3>
+                                    <p class="mb-1"><i class="fas fa-phone-alt mr-2"></i> 0882009157424 (AGDAN)</p>
+                                    <p class="mb-1"><i class="fab fa-whatsapp mr-2"></i> 0882-0091-57424 (AGDAN)</p>
+                                    <p class="mb-1"><i class="fas fa-envelope mr-2"></i> info@civicturboid.com</p>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium mb-2">Sosial Media</h3>
+                                    <div class="flex space-x-4">
+                                        <a href="#" class="text-white hover:text-blue-200 transition duration-300"><i class="fab fa-facebook-f"></i></a>
+                                        <a href="#" class="text-white hover:text-blue-200 transition duration-300"><i class="fab fa-instagram"></i></a>
+                                        <a href="#" class="text-white hover:text-blue-200 transition duration-300"><i class="fab fa-twitter"></i></a>
+                                        <a href="#" class="text-white hover:text-blue-200 transition duration-300"><i class="fab fa-youtube"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        <?php endif; ?>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-bold mb-4">CivicTurboID</h3>
+                    <p class="text-gray-400 text-sm">Platform terbaik untuk jual beli mobil Honda Civic Turbo dengan kualitas terjamin di Indonesia.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Tautan Cepat</h3>
+                    <ul class="space-y-2">
+                        <li><a href="?page=home" class="text-gray-400 hover:text-white text-sm transition duration-300">Beranda</a></li>
+                        <li><a href="?page=mobil" class="text-gray-400 hover:text-white text-sm transition duration-300">Daftar Mobil</a></li>
+                        <li><a href="?page=about" class="text-gray-400 hover:text-white text-sm transition duration-300">Tentang Kami</a></li>
+                        <li><a href="?page=contact" class="text-gray-400 hover:text-white text-sm transition duration-300">Kontak</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Layanan</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white text-sm transition duration-300">Jual Mobil</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white text-sm transition duration-300">Beli Mobil</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white text-sm transition duration-300">Konsultasi</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white text-sm transition duration-300">FAQ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Berlangganan</h3>
+                    <p class="text-gray-400 text-sm mb-2">Dapatkan info mobil terbaru di email Anda</p>
+                    <div class="flex">
+                        <input type="email" placeholder="Alamat email" class="px-3 py-2 text-gray-800 text-sm rounded-l-md w-full">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-md text-sm">Kirim</button>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400 text-sm">
+                <p>© <?= date('Y') ?> CivicTurboByAgdan. Seluruh hak dilindungi.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.querySelector('.md\\:hidden').addEventListener('click', function() {
+            document.querySelector('nav').classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+                         
